@@ -2,33 +2,50 @@
 #include <cmath>
 #include <algorithm>
 #include <string.h>
+#include <biquad.h> // simple biquad filters
+#include <math_neon.h>
 
-float gInterval = 1;
-float gSecondsElapsed = 0;
-int gCount = 0;
-
-// AUDIO
+// AUDIO VARIABLES
 #define gAUDIOFRAMES 128
 int gAudioChannelNum; // number of audio channels to iterate over
-float gBlock[gAUDIOFRAMES*2]; //interleaved AudioBlock to be used in render.
+int gAudioChannelInput = 0; //which input channel to use. 0 = left, 1 = right
+
+float gBlock[gAUDIOFRAMES]; // AudioBlock to be used in render.
 
 
 
 // TEST
-float test[gAUDIOFRAMES*2];
+float test[gAUDIOFRAMES];
+
+// Variables used to print every gInterval during render
+float gInterval = 1;
+float gSecondsElapsed = 0;
+int gCount = 0;
+
+
+// ------------------------- USER SETTINGS -------------------------
+void Bela_userSettings(BelaInitSettings *settings)
+{
+	settings->interleave = 0; //Sets if the audio buffers are interleaved or not. 0 = not interleaved.
+	settings->analogOutputsPersist = 0; //makes sure analog outs do not persist across frames. Reduces memory usage
+}
+
 
 // ------------------------- SETUP -------------------------
 bool setup(BelaContext *context, void *userData)
 {
-    
-    // Print a string
-	//rt_printf("Audioframes = %d \n",context->audioFrames);
-	//rt_printf("sizeof(context->audioIn)= %d \n", sizeof(context->audioIn));
+
+    // Print strings
+    rt_printf("Using input %s \n", gAudioChannelInput ? "Right":"Left");
+	rt_printf("Audioframes = %d samples per input \n",context->audioFrames);
+	rt_printf("Bela buffers are %s\n", (context->flags & BELA_FLAG_INTERLEAVED) ? "interleaved":"not interleaved");
 
 
 	// Set number of audio channels to minimum of I/O
     gAudioChannelNum = std::min(context->audioInChannels, context->audioOutChannels);
-    //set AudioFrame 
+
+
+
 	return true;
 }
 
@@ -36,26 +53,34 @@ bool setup(BelaContext *context, void *userData)
 // ------------------------- RENDER -------------------------
 void render(BelaContext *context, void *userData)
 {
-	
-	// tilsvarende til audioRead, men 1 samlet operation. gBlock er interleavet LR
-	memcpy(gBlock, context->audioIn,sizeof(context->audioIn)*context->audioFrames*2);
-	
-	
-	/*
-	for(unsigned int n = 0; n < context->audioFrames; n++) {
-	
+
+	// Copies input channel to processing block
+	memcpy(gBlock, &context->audioIn[gAudioChannelInput * context->audioFrames],sizeof(context->audioIn)*context->audioFrames);
+
+
+
+
+
+/*	for(unsigned int n = 0; n < context->audioFrames; n++) { //main audio loop if not using block
+
 		for(unsigned int ch = 0; ch < gAudioChannelNum; ch++){
-			test[2*n+ch+1] = audioRead(context,n,ch); // Off by one at the start samp(1) == samples (0)
-			audioWrite(context, n, ch, audioRead(context, n, ch));
+
+
+
+			audioWriteNI(context, n, ch, audioReadNI(context, n, ch));
+
+
 		} //end inner audio loop
-		
+
 		// Increment a counter on every frame
 		gCount++;
-		
-		// Print a message every second
+
+		// Print a message every interval
 		if(gCount % (int)(context->audioSampleRate*gInterval) == 0) {
 		    gSecondsElapsed += gInterval;
-	    	
+
+
+
 	    	rt_printf("memcpy: ");
 		    for(int j = 0;j<context->audioFrames;j++){
 				rt_printf("%f, ",gBlock[j]);
@@ -65,15 +90,15 @@ void render(BelaContext *context, void *userData)
 				rt_printf("%f, ",test[j]);
 		    }
 		}
-		
 
-		
+
+
 	} //end outer audio loop
-	*/
-	
-	
-	memcpy(context->audioOut,gBlock,sizeof(context->audioIn)*context->audioFrames*2);
-	
+*/
+
+	memcpy(context->audioOut,gBlock,sizeof(context->audioIn)*context->audioFrames);	//Copy block to left output channel
+	memcpy(&context->audioOut[1 * context->audioFrames],gBlock,sizeof(context->audioIn)*context->audioFrames);  //Copy block to right output channel
+
 }
 
 
@@ -83,21 +108,3 @@ void cleanup(BelaContext *context, void *userData)
 {
 
 }
-
-
-/**
-\example print/render.cpp
-
-Printing to the console
------------------------
-
-This example demonstrates how to print to the console. When working within the audio thread
-use the function rt_printf(). This has the same functionality as printf() but is safe to call
-from the audio thread. However, make sure to not make too many calls to this function within a
-render loop as this may overload the CPU and/or stall communication with the board.
-In the render() function above a counter is implemented in order to only print to the console
-after a specified interval has passed. A counter variable is used to keep track of the amount
-of samples elapsed after starting the program.
-The usage of rt_printf() is identical to printf(): http://en.cppreference.com/w/cpp/io/c/fprintf
-
-*/
