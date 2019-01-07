@@ -1,8 +1,7 @@
 % Outputs a source spectrum. Input fftsize and fundamental frequency.
 
 function [source_spectrum, source_spectrum_fft, spectral_envelope] = Source_spectrum_synthesis(f0, y)
-%f0 = fundamental frequency of input. Found using pitch tracking
-%y = input signal in time domain. FFTSize block.
+
 %% Setup
 %close all
 %clear all
@@ -13,6 +12,7 @@ FFTsize = 1024; % size of FFT
 binsize = SampleRate/FFTsize; % size of every bin
 source_spectrum_fft = zeros(FFTsize, 1); % source spectrum, fourier transformed
 %
+f0 = 146.83; % fundamental frequency (d)
 harmonicStep = f0; % initialize the step of the harmonics
 
 
@@ -97,7 +97,6 @@ end
 %% Calculate the envelope spectrum
 
 Xm = fft(y);
-Orig_signal_phase = atan2(imag(Xm),real(Xm));
 
 Xc = ifft(log(10^(-9) + Xm));
 
