@@ -8,18 +8,18 @@ clear all;
 
 % load test audio
 [y, Fs] = audioread('SantaHoHo.wav');
-y = y(1 : length(y) - mod(length(y), 128));
-counter = 1;
+y = y(:,1);
+
+SampleRate = 44100; % sample rate
+FFTsize = 1024; % size of FFT
+binsize = SampleRate/FFTsize; % size of every bin
+window = sqrt(hann(1024));
 
 %% Processing
 
 % process sample-by-sample here:
-for i = 1:128:length(y)
-    
-    FFT = fft(y(i : i +127));
-    FFT(33 : 64) = FFT(1 : 32);
-    FFT(65 : 96) = FFT(97: 128);
-    FFT(1 : 32) = zeros
+for i = 1: floor(length(y)/FFTsize)
+    y(i*FFTsiz: i*
     
 end
 
