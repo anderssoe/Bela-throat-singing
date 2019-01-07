@@ -12,7 +12,6 @@ FFTsize = 1024; % size of FFT
 binsize = SampleRate/FFTsize; % size of every bin
 source_spectrum_fft = zeros(FFTsize, 1); % source spectrum, fourier transformed
 %
-f0 = 146.83; % fundamental frequency (d)
 harmonicStep = f0; % initialize the step of the harmonics
 
 
