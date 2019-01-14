@@ -62,7 +62,7 @@ for i = 1: floor(length(Voice_signal)/M) - 1;
     input = input .* window;
     f0 = pitchTrack_zc(input, length(input), sig_filter);
     [X] = Spectral_envelope(analysis, w_lp);
-    %f0 = 122.2;
+    %f0 = 130;
     [SourceSpectrum] = Source_spectrum(f0);
     
     input = X .* SourceSpectrum;

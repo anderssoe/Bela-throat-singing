@@ -14,11 +14,14 @@ Xc = ifft(log(10^(-9) + Xm));
 
 Xc = Xc .* w_lp;
 
-X = exp(real(fft(Xc))).*normrnd(0,pi/2,[1,FFTsize]);%.*(cos(theta) + 1i * sin(theta));
+X = exp(real(fft(Xc)));%.*normrnd(0,pi/2,[1,FFTsize]);%.*(cos(theta) + 1i * sin(theta));
 
 %%begin interpolation
 
 X  = interp1(1 : BINsize : Fs , X , 1 : 1 : Fs,'linear',0);
+X(Fs/2+1) = 0;
+X(Fs/2 + 2 : end) = fliplr(X(2:Fs/2));
+
 
 
 

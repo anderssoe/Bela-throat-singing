@@ -9,7 +9,7 @@ global Fs
 y_pos = zeros(Fs/2+1,1);
 
 for kk = round(f0/2) : round(f0/2) : Fs/2
-  y_pos(kk+1) = 1/kk;
+  y_pos(kk+1) = 1/kk^2;
 end
 
 y_neg = flipud(y_pos(2:end-1));
