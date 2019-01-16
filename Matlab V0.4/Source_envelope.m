@@ -1,20 +1,30 @@
 % Outputs a source spectrum. Input fftsize and fundamental frequency.
 
-function [source_spectrum] = Source_spectrum(f0)
+function [X] = Source_envelope(y, w_hp)
+% y is a input signal of size (1, FFTsize)
 
-global Fs
+% [signal, Fs] = audioread('SantaHoHo.wav');
+% signal = signal(:,1);
+% y = signal(90001:90001 + 1024)';
 
-%% creating source spectrum
+global BINsize Fs FFTsize;
+Xm =  fft(y);
 
-y_pos = zeros(Fs/2+1,1);
+Xc = ifft(log(10^(-18) + abs(Xm)));
 
-for kk = round(f0/2) : round(f0/2) : Fs/2
-  y_pos(kk+1) = 1/kk^2;
-end
+Xc = Xc .* w_lp;
 
-y_neg = flipud(y_pos(2:end-1));
+X = exp(real(fft(Xc)));%.*normrnd(0,pi/2,[1,FFTsize]);%.*(cos(theta) + 1i * sin(theta));
 
-source_spectrum = [y_pos;y_neg]';
+%X = real(fft(Xc));
+%%begin interpolation
+
+%X  = interp1(1 : BINsize : Fs , X , 1 : 1 : Fs,'linear',0);
+%X = smooth(X,20,'moving');
+%X = X';
+X(Fs/2+1) = 0;
+X(Fs/2 + 2 : end) = fliplr(X(2:Fs/2));
+
 
 
 % source_spectrum = zeros(1, Fs/2);

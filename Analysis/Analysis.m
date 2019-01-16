@@ -35,9 +35,9 @@ figure('Name', 'Fourier comparison_dB', 'position', [300 300 900 500])
 plot(frequency, mag2db(abs(fft_k)), 'Linewidth', 2.4)
 hold all
 %plot(frequency, mag2db(abs(fft_n)), 'Linewidth', 1.99, 'LineStyle', ':')
-plot(frequency, mag2db(abs(fft_s1)), 'Linewidth', 1.4);%, 'LineStyle', ':')
-plot(frequency, mag2db(abs(fft_s2)), 'Linewidth', 1.8);%, 'LineStyle', ':')
-plot(frequency, mag2db(abs(fft_s3)), 'Linewidth', 1.7);%, 'LineStyle', ':')
+plot(frequency, mag2db(abs(fft_n)), 'Linewidth', 1.4);%, 'LineStyle', ':')
+%plot(frequency, mag2db(abs(fft_s2)), 'Linewidth', 1.8);%, 'LineStyle', ':')
+%plot(frequency, mag2db(abs(fft_s3)), 'Linewidth', 1.7);%, 'LineStyle', ':')
 
 legend('Kargyraa','1024', '8*1024', '16*1024');
 set(gca,'fontsize', 16)
@@ -67,9 +67,9 @@ figure('Name', 'Fourier comparison', 'position', [300 300 900 500])
 plot(frequency, abs(fft_k), 'Linewidth', 2.4)
 hold all
 %plot(frequency, abs(fft_n), 'Linewidth', 1.99, 'LineStyle', ':')
-plot(frequency, abs(fft_s1), 'Linewidth', 0.1);%, 'LineStyle', ':')
-plot(frequency, abs(fft_s2), 'Linewidth', 1.8);%, 'LineStyle', ':')
-plot(frequency, abs(fft_s3), 'Linewidth', 2.0);%, 'LineStyle', ':')
+plot(frequency, abs(fft_n + circshift(fft_n, -5 0)), 'Linewidth', 0.1);%, 'LineStyle', ':')
+%plot(frequency, abs(fft_s2), 'Linewidth', 1.8);%, 'LineStyle', ':')
+%plot(frequency, abs(fft_s3), 'Linewidth', 2.0);%, 'LineStyle', ':')
 legend('Kargyraa','1024', '8*1024', '16*1024');
 set(gca,'fontsize', 16)
 title('Kargyraa vs voice signal', 'FontSize', 20)

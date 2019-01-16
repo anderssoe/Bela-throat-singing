@@ -1,6 +1,6 @@
 % Outputs a source spectrum. Input fftsize and fundamental frequency.
 
-function [source_spectrum] = Source_spectrum(f0)
+function [source_spectrum] = Source_spectrum(f0, Envelope)
 
 global Fs
 
@@ -9,8 +9,12 @@ global Fs
 y_pos = zeros(Fs/2+1,1);
 
 for kk = round(f0/2) : round(f0/2) : Fs/2
-  y_pos(kk+1) = 1/kk^2;
+  y_pos(kk+1) = 1;
 end
+
+y_pos = y_pos.*Envelope(1 : Fs/2+1)';
+y_pos = circshift(y_pos,-round(f0/2));
+y_pos(end - round(f0/2):end) = 0;
 
 y_neg = flipud(y_pos(2:end-1));
 
