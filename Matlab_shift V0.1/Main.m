@@ -7,7 +7,7 @@ clc,
 clear all;
 close all;
 
-global Fs
+global Fs f0_vec_block
 % load test audio
 [Analysis_signal, Fs] = audioread('Kargyraa_O.wav');
 [Voice_signal] = audioread('Voice_O.wav');
@@ -30,17 +30,18 @@ window = (hann(Blocksize, 'periodic'))';
 M = Blocksize/2; % block size
 
 % making the filter for the pitch tracking algorithm
-sig_filter = designfilt('bandpassiir', 'FilterOrder', 4, 'PassbandFrequency1', 100, 'PassbandFrequency2', 180, 'PassbandRipple', 1, 'SampleRate', 44100);
+sig_filter = designfilt('bandpassiir', 'FilterOrder', 8, 'PassbandFrequency1', 100, 'PassbandFrequency2', 180, 'PassbandRipple', 1, 'SampleRate', 44100);
 
 % making LP filter for final processing
 sig_filter_lp = designfilt('lowpassiir', 'FilterOrder', 2, 'HalfPowerFrequency', 1200, 'SampleRate', 44100);
 
 upsample_filter = designfilt('lowpassfir', 'FilterOrder', 100, 'PassbandFrequency', 4000, 'StopbandFrequency', 11000/2, 'SampleRate', 44100);
 %% Processing
-
+f0_last = 0;
 output = 0;
 % Overlap buffer
 buffer = zeros(1,M);
+tail = zeros(1, 2*M);
 % process block-to-block
 for i = 1: floor(length(Voice_signal)/M) - 1
 
@@ -58,6 +59,7 @@ for i = 1: floor(length(Voice_signal)/M) - 1
     %zeropadding input block to FFTsize Hz for 1Hz resolution
     %FFT input block
     original_fft = fft(input,FFTsize);
+
 
     input = circshift(original_fft, -round((f0*(FFTsize/Fs)+1)/2));
     
@@ -79,7 +81,7 @@ for i = 1: floor(length(Voice_signal)/M) - 1
     input(1:round((f0*(FFTsize/Fs)+1)-(f0/4 *(FFTsize/Fs)+1))) =  input(1:round((f0*(FFTsize/Fs)+1)-(f0/4 *(FFTsize/Fs)+1))) * 0.1;
 
     input(1) = 0;
-    input(FFTsize/2 + 1) = 0;
+    input(round(FFTsize/2 + 1)) = 0;
     
     input(FFTsize/2+2 : end) = conj(fliplr(input(2 : FFTsize/2)));
     
@@ -88,6 +90,7 @@ for i = 1: floor(length(Voice_signal)/M) - 1
     Fs = Fs_orig;
     input = upsample(input,downsampling);
     input = filter(upsample_filter,input);
+
     
     input = input(1 : Blocksize);
     input = input .* window;
@@ -96,27 +99,27 @@ for i = 1: floor(length(Voice_signal)/M) - 1
 
     buffer = input(1+ M : 2 * M);
     
-    
+    f0_last = f0;
 end
 
 
 %% Playback
-% output =  0.9 .* output ./ max(abs(output));
+ output =  0.9 .* output ./ max(abs(output));
 % 
-% audiowrite('../Analysis/SpectralShift_RT.wav',output,Fs)
+ audiowrite('Analysis/Output sound files/SpectralShift_RT_mean.wav',output,Fs)
 % % playback test audio
-% sound(output', Fs);
+ sound(output', Fs);
 
 
 %%
 moving = 4;
-plot(movmean(mag2db(abs(fft(output,Fs))),moving), 'LineWidth', 2.3);
+plot(movmean((abs(fft(output,Fs))),moving), 'LineWidth', 2.3);
 hold on
-plot(movmean(mag2db(abs(fft(Analysis_signal,Fs))),moving),'LineStyle','-.', 'LineWidth', 1.2);
+plot(movmean((abs(fft(Analysis_signal,Fs))),moving),'LineStyle','-.', 'LineWidth', 1.2);
 %plot(abs(fft(Voice_signal,Fs)), 'LineWidth', 1.5);
-xlim([0 1000]);
+xlim([0 10000]);
 legend('output','kargyraa_O','input')
 title(sprintf('Output vs targeted, %d Blocksize, MA = %d',Blocksize,moving))
 
-saveas(gcf, sprintf('../Analysis/Plots/SpectralShiftComparison%d',Blocksize), 'epsc')
+saveas(gcf, sprintf('Analysis/Plots/SpectralShiftComparison%d',Blocksize), 'epsc')
 
