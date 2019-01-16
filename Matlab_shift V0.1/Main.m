@@ -18,7 +18,9 @@ global Fs
 
 % Set constants
 Fs = 44100; % sample rate
-FFTsize = 44100/10;
+downsampling = 4;
+Fs_downsampled = Fs/4;
+FFTsize = 1024;
 Blocksize = 1024*3; % size of FFT
 BINsize = Fs/Blocksize; % size of every bin
 Hishelf = 1000; %-30dB highshelf in hz;
@@ -32,6 +34,8 @@ sig_filter = designfilt('bandpassiir', 'FilterOrder', 4, 'PassbandFrequency1', 1
 
 % making LP filter for final processing
 sig_filter_lp = designfilt('lowpassiir', 'FilterOrder', 2, 'HalfPowerFrequency', 1200, 'SampleRate', 44100);
+
+upsample_filter = designfilt('lowpassfir', 'FilterOrder', 100, 'PassbandFrequency', 4000, 'StopbandFrequency', 11000/2, 'SampleRate', 44100);
 %% Processing
 
 output = 0;
@@ -46,22 +50,23 @@ for i = 1: floor(length(Voice_signal)/M) - 1
     f0 = pitchTrack_zc(input, length(input), sig_filter);
     f0_vec(i) = f0; 
     
+    Fs_orig = Fs;
+    Fs = Fs_downsampled;
     
-    %zeropadding input block to Fs Hz for 1Hz resolution
-    input = [input zeros(1,FFTsize-length(input))];
-    
+    input = filter(upsample_filter,input);
+    input = downsample(input,downsampling);
+    %zeropadding input block to FFTsize Hz for 1Hz resolution
     %FFT input block
-    original_fft = fft(input);
-    
-    
+    original_fft = fft(input,FFTsize);
+
     input = circshift(original_fft, -round((f0*(FFTsize/Fs)+1)/2));
     
     
     % Hishelf on the pitch shifted version
     fc1 = round(600*(FFTsize/Fs)+1);
     fc2 = round(500*(FFTsize/Fs)+1);
-    filter = [ones(1,fc1) ones(1, fc2)*0.7 ones(1,length(input)-fc1-fc2)*0.1];
-    original_fft = original_fft.* filter;
+    filter2 = [ones(1,fc1) ones(1, fc2)*0.7 ones(1,length(input)-fc1-fc2)*0.1];
+    original_fft = original_fft.* filter2;
     
     % Hishelf from 1k on the input
     input = input.*[ones(1,round(Hishelf*(FFTsize/Fs)+1)) ones(1,round(FFTsize - (Hishelf*(FFTsize/Fs)+1)))*0.05];
@@ -80,6 +85,9 @@ for i = 1: floor(length(Voice_signal)/M) - 1
     
     input = ifft(input);
   
+    Fs = Fs_orig;
+    input = upsample(input,downsampling);
+    input = filter(upsample_filter,input);
     
     input = input(1 : Blocksize);
     input = input .* window;
