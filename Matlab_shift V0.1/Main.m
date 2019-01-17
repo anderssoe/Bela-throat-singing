@@ -21,7 +21,7 @@ Fs = 44100; % sample rate
 downsampling = 4;
 Fs_downsampled = Fs/4;
 FFTsize = 1024;
-Blocksize = 1024*3; % size of FFT
+Blocksize = 3*1024; % size of FFT
 BINsize = Fs/Blocksize; % size of every bin
 Hishelf = 1000; %-30dB highshelf in hz;
 dryWet = 0.55; %percentage of dry to wet (1 = completely dry)
@@ -113,11 +113,11 @@ end
 
 %%
 moving = 4;
-plot(movmean((abs(fft(output,Fs))),moving), 'LineWidth', 2.3);
+plot(movmean(mag2db(abs(fft(output,Fs))),moving), 'LineWidth', 2.3);
 hold on
-plot(movmean((abs(fft(Analysis_signal,Fs))),moving),'LineStyle','-.', 'LineWidth', 1.2);
+plot(movmean(mag2db(abs(fft(Analysis_signal,Fs))),moving),'LineStyle','-.', 'LineWidth', 1.2);
 %plot(abs(fft(Voice_signal,Fs)), 'LineWidth', 1.5);
-xlim([0 10000]);
+xlim([0 1000]);
 legend('output','kargyraa_O','input')
 title(sprintf('Output vs targeted, %d Blocksize, MA = %d',Blocksize,moving))
 

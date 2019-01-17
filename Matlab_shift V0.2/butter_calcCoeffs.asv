@@ -1,0 +1,15 @@
+cutoff_Hz = 1000;
+Fs = 44100;
+
+%function [b,a] = butter_calcCoeffs(cutoff_Hz,Fs)
+%Calculates a 2nd order Butterworth IIR filter with a chosen cutoff
+%frequency in Hz.
+b = NaN(1,3); %3 b values
+a = NaN(1,2); %3 a values
+
+cutoff_normalised = 2*pi*cutoff_Hz/Fs; %normalise cutoff
+denom = 4+2*sqrt(2)*cutoff_normalised + cutoff_normalised * cutoff_normalised;
+
+b(1) = cutoff_normalised*cutoff_normalised/denom; %b0
+b(2) = 2*b(1); %b1
+b(3) = b(1); %
